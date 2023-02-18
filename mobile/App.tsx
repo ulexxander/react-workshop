@@ -1,118 +1,255 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
+  Button,
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
+  TextInput,
   View,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+type ApiResponse<R> = {
+  data: R;
+  error: ApiError;
+};
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+type ApiError = {
+  code: string;
+  message: string;
+};
 
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+// Android Emulator Host IP.
+// TODO: configurable with config file.
+const API_BASE_URL = 'http://10.0.2.2:4000';
+
+async function apiRequest<R>(
+  method: string,
+  endpoint: string,
+  body?: Record<string, any>,
+): Promise<R> {
+  let req: RequestInit = {method};
+  if (body) {
+    req = {
+      ...req,
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+  }
+
+  const url = API_BASE_URL + endpoint;
+  const res = await fetch(url, req);
+
+  const resDecoded: ApiResponse<R> = await res.json();
+  if (resDecoded.error) {
+    const {code, message} = resDecoded.error;
+    throw new Error(`API error: ${code} - ${message}`);
+  }
+
+  return resDecoded.data;
 }
 
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+type Note = {
+  id: number;
+  title: string;
+  content: string;
+  createdAt: string;
+};
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+function getNotes(): Promise<Note[]> {
+  return apiRequest('GET', '/notes');
+}
 
+function getNoteById(id: number): Promise<Note[]> {
+  return apiRequest('GET', `/notes/${id}`);
+}
+
+type NoteCreateParams = {
+  title: string;
+  content: string;
+};
+
+function postNote(params: NoteCreateParams): Promise<Note> {
+  return apiRequest('POST', '/notes', params);
+}
+
+export const App: React.FC = () => {
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+    <SafeAreaView style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#171717" />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
+        style={styles.scroll}>
+        <Text style={styles.title}>Notes App</Text>
+        <Notes />
       </ScrollView>
     </SafeAreaView>
   );
+};
+
+const Notes: React.FC = () => {
+  const [notes, setNotes] = useState<Note[]>();
+  const [error, setError] = useState<Error>();
+
+  const loadNotes = () => {
+    getNotes()
+      .then(notes => setNotes(notes.reverse())) // Descending order.
+      .catch(err => setError(err));
+  };
+
+  useEffect(loadNotes, []);
+
+  if (error) {
+    return (
+      <Text style={styles.textRed}>Error loading notes: {error.message}</Text>
+    );
+  }
+
+  if (!notes) {
+    return <Text style={styles.textGray}>Loading...</Text>;
+  }
+
+  return (
+    <View>
+      <NoteCreate onCreate={loadNotes} />
+      <NotesList notes={notes} />
+    </View>
+  );
+};
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleString();
 }
 
+export const NotesList: React.FC<{notes: Note[]}> = ({notes}) => {
+  if (!notes.length) {
+    return <Text>No notes yet, create your first!</Text>;
+  }
+
+  return (
+    <View>
+      {notes.map(note => (
+        <View key={note.id} style={styles.note}>
+          <Text style={[styles.noteTitle, styles.textBold]}>
+            #{note.id} {note.title}
+          </Text>
+          <Text style={styles.textItalic}>{note.content}</Text>
+          <Text style={styles.textGray}>{formatDate(note.createdAt)}</Text>
+        </View>
+      ))}
+    </View>
+  );
+};
+
+export const NoteCreate: React.FC<{onCreate: () => void}> = ({onCreate}) => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+
+  const [note, setNote] = useState<Note>();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error>();
+
+  const onSubmit = () => {
+    setLoading(true);
+    postNote({
+      title,
+      content,
+    })
+      .then(note => {
+        setNote(note);
+        setTitle('');
+        setContent('');
+        onCreate();
+      })
+      .catch(err => setError(err))
+      .finally(() => setLoading(false));
+  };
+
+  return (
+    <View>
+      <Text style={styles.noteCreateTitle}>New note</Text>
+
+      <Text>Title</Text>
+      <TextInput
+        style={styles.input}
+        value={title}
+        onChangeText={text => setTitle(text)}
+      />
+
+      <Text>Content</Text>
+      <TextInput
+        style={styles.input}
+        value={content}
+        onChangeText={text => setContent(text)}
+      />
+
+      <Button title="Submit" onPress={onSubmit} color="#0891b2" />
+
+      <View style={styles.noteCreateStatus}>
+        {note && <Text style={styles.textGreen}>Created note #{note.id}</Text>}
+        {loading && <Text style={styles.textGray}>Loading...</Text>}
+        {error && (
+          <Text style={styles.textRed}>
+            Error creating note: {error.message}
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  screen: {
+    backgroundColor: '#171717',
+    flex: 1,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  scroll: {
+    paddingHorizontal: 20,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  title: {
+    fontSize: 32,
+    lineHeight: 80,
   },
-  highlight: {
-    fontWeight: '700',
+  noteCreateStatus: {
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  noteCreateTitle: {
+    fontSize: 20,
+    marginBottom: 10,
+  },
+  note: {
+    paddingBottom: 10,
+  },
+  noteTitle: {
+    fontSize: 20,
+  },
+  input: {
+    height: 40,
+    marginTop: 5,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    backgroundColor: '#303030',
+    borderColor: '#525252',
+    padding: 10,
+  },
+  textBold: {
+    fontWeight: 'bold',
+  },
+  textItalic: {
+    fontStyle: 'italic',
+  },
+  textGray: {
+    color: '#a8a29e',
+  },
+  textRed: {
+    color: ' #dc2626',
+  },
+  textGreen: {
+    color: '#65a30d',
   },
 });
-
-export default App;
