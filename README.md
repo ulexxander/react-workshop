@@ -46,6 +46,16 @@ yarn
 yarn dev
 ```
 
+```sh
+# Build Docker image.
+docker build -t react-workshop-web .
+```
+
+```sh
+# Run as a Docker container, app being served by Nginx.
+docker run --rm -it -p 4000:80 react-workshop-web
+```
+
 ## React Native
 
 [React Native · Learn once, write anywhere](https://reactnative.dev/)
