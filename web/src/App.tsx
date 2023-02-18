@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 
-const API_BASE_URL = "http://localhost:4000";
+// Development server proxy.
+// TODO: configurable for deployment.
+const API_BASE_URL = "/api";
 
 async function apiRequest(endpoint: string) {
   const url = API_BASE_URL + endpoint;
