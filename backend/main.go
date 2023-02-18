@@ -199,5 +199,5 @@ func responseError(w http.ResponseWriter, err error) {
 	log.Printf("API request error: %s [%d]", apiErr, statusCode)
 
 	w.WriteHeader(statusCode)
-	response(w, apiErr)
+	response(w, Response{Error: apiErr})
 }
