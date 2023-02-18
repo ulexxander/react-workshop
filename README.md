@@ -18,6 +18,39 @@ React helps with:
 
 - [Node.js](https://nodejs.org/en/) - LTS recommended, `18.14.1` at the moment of writing this.
 - [Yarn - Package Manager](https://yarnpkg.com/) - alternative to NPM.
+- [Docker: Accelerated, Containerized Application Development](https://www.docker.com/)
+
+## Backend
+
+Simple REST API example with a single resource:
+
+```
+GET /notes
+GET /notes/{id}
+POST /notes
+```
+
+### Usage
+
+```sh
+# Go to project directory.
+cd backend
+```
+
+```sh
+# Optionally run locally, requires Go SDK installed.
+go run main.go -addr=:4000
+```
+
+```sh
+# Build Docker image.
+docker build -t react-workshop-backend .
+```
+
+```sh
+# Run as a Docker container with port forwarded to 4000 on host.
+docker run --rm -it -p 4000:80 react-workshop-backend
+```
 
 ## React DOM
 
@@ -30,6 +63,8 @@ Located under `web` directory.
 Was bootstrapped with `yarn create vite` command, but you don't have to run it.
 
 ### Usage
+
+Ensure [Backend](#backend) is set up and running.
 
 ```sh
 # Go to project directory.
@@ -52,8 +87,8 @@ docker build -t react-workshop-web .
 ```
 
 ```sh
-# Run as a Docker container, app being served by Nginx.
-docker run --rm -it -p 4000:80 react-workshop-web
+# Run as a Docker container, with port forwarded to 4010 on host, app being served by Nginx.
+docker run --rm -it -p 4010:80 react-workshop-web
 ```
 
 ## React Native
