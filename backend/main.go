@@ -13,7 +13,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var flagAddr = flag.String("addr", ":80", "Address to run API HTTP server on")
+var (
+	flagAddr     = flag.String("addr", ":80", "Address to run API HTTP server on")
+	flagSlowDown = flag.Duration("slow-down", time.Millisecond*200, "Slow down every API response by time specified")
+)
 
 func main() {
 	flag.Parse()
@@ -49,12 +52,20 @@ func newHandler() *handler {
 		notes: []Note{},
 	}
 
-	h.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Println("Incoming API request:", r.Method, r.URL)
-			next.ServeHTTP(w, r)
-		})
-	})
+	h.Use(
+		func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				log.Println("Incoming API request:", r.Method, r.URL)
+				next.ServeHTTP(w, r)
+			})
+		},
+		func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				time.Sleep(*flagSlowDown)
+				next.ServeHTTP(w, r)
+			})
+		},
+	)
 
 	h.Get("/notes", func(w http.ResponseWriter, r *http.Request) {
 		responseData(w, h.notes)

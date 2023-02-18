@@ -13,4 +13,4 @@ FROM buildpack-deps:bullseye-curl
 WORKDIR /app
 COPY --from=builder /build/notesapi .
 EXPOSE 80
-CMD ["/app/notesapi"]
+ENTRYPOINT ["/app/notesapi"]
