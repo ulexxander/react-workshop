@@ -15,10 +15,9 @@
 }
 
 #root {
-  max-width: 1280px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
 }
 
 a {
@@ -32,10 +31,9 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  font-size: 20px;
 }
 
 h1 {
@@ -60,6 +58,43 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+input,
+textarea {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.text-gray {
+  color: #a8a29e;
+}
+
+.text-red {
+  color: #dc2626;
+}
+
+.text-green {
+  color: #65a30d;
+}
+
+.text-bold {
+  font-weight: bold;
+}
+
+.text-italic {
+  font-style: italic;
+}
+
+.notes {
+  display: flex;
+  justify-content: space-between;
+}
+
+.notes-list {
+  margin-right: 1rem;
 }
 
 @media (prefers-color-scheme: light) {
