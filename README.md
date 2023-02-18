@@ -16,11 +16,14 @@ React helps with:
 
 ## Requirements
 
+- [Docker: Accelerated, Containerized Application Development](https://www.docker.com/)
 - [Node.js](https://nodejs.org/en/) - LTS recommended, `18.14.1` at the moment of writing this.
 - [Yarn - Package Manager](https://yarnpkg.com/) - alternative to NPM.
-- [Docker: Accelerated, Containerized Application Development](https://www.docker.com/)
+- [React Native development environment](https://reactnative.dev/docs/environment-setup)
 
 ## Backend
+
+Located under `backend` directory.
 
 Simple REST API example with a single resource:
 
@@ -95,4 +98,43 @@ docker run --rm -it -p 4010:80 react-workshop-web
 
 [React Native · Learn once, write anywhere](https://reactnative.dev/)
 
-TODO.
+Building cross platform (Android, IOS) mobile apps with React.
+
+Located under `mobile` directory.
+
+Was bootstrapped with `npx react-native init ReactWorkshop` command, but you don't have to run it.
+
+### Usage
+
+```sh
+# Go to project directory.
+cd mobile
+```
+
+```sh
+# Install dependencies.
+yarn
+```
+
+```sh
+# Start React Native bundler.
+yarn start
+```
+
+```sh
+# Build and run app on Android.
+# Requires either physical or virtual device that can be accessed via ADB.
+yarn android
+```
+
+```sh
+# Build APK for Android.
+yarn build-apk
+# android/app/build/outputs/apk/release/app-release.apk
+```
+
+```sh
+# Build AAB for Android (Play Store).
+yarn build-aab
+# mobile/android/app/build/outputs/bundle/release/app-release.aab
+```
